@@ -1,112 +1,235 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import PlanCard from "../components/Plans/PlanCard";
+import Loading from "../components/Loading/Loading";
+import { motion } from "framer-motion";
+import { Crown, Sparkles, Shield } from "lucide-react";
+import { useTheme } from "../contexts/ThemeContext";
+import { Helmet } from "react-helmet";
 
-@keyframes shine {
-  0% {
-    box-shadow: 0 0 10px #3b82f6, 0 0 20px #6366f1;
-  }
-  50% {
-    box-shadow: 0 0 20px #6366f1, 0 0 40px #3b82f6;
-  }
-  100% {
-    box-shadow: 0 0 10px #3b82f6, 0 0 20px #6366f1;
-  }
-}
-
-.animate-shine {
-  animation: shine 1.5s infinite alternate;
-}
-
-@keyframes pulse-brightness {
-  0% {
-    box-shadow: 0 0 5px 2px rgba(255, 215, 0, 0.8);
-    background-color: #FFD700;
-  }
-  50% {
-    box-shadow: 0 0 15px 5px rgba(255, 215, 0, 1);
-    background-color: #ffec8bef;
-  }
-  100% {
-    box-shadow: 0 0 5px 2px rgba(255, 215, 0, 0.8);
-    background-color: #FFD700;
-  }
-}
-
-.animate-pulse-brightness {
-  animation: pulse-brightness 2.5s infinite;
-}
+const Plans: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isVip, setIsVip] = useState(false);
+  const navigate = useNavigate();
+  const token = localStorage.getItem("Token");
+  const email = localStorage.getItem("email");
+  const { theme } = useTheme();
 
 
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
 
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient 8s ease infinite;
-}
+  useEffect(() => {
+    const checkAuthAndVipStatus = async () => {
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
+      try {
+        const authResponse = await fetch(
+          `${import.meta.env.VITE_BACKEND_URL}/auth/dashboard`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient 8s ease infinite;
-}
+        if (authResponse.ok) {
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem("Token");
+          setIsAuthenticated(false);
+        }
 
+        const vipResponse = await fetch(
+          `${import.meta.env.VITE_BACKEND_URL}/auth/is-vip/${email}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const data = await vipResponse.json();
+        setIsVip(data.isVip);
+      } catch (error) {
+        console.error("Error checking authentication or VIP status:", error);
+        localStorage.removeItem("Token");
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuthAndVipStatus();
+  }, [token, email]);
+
+  const handleAccessClick = async (plan: "monthly" | "annual") => {
+    const token = localStorage.getItem("Token");
+    const email = localStorage.getItem("email");
+  
+    if (!token) {
+      navigate('/register')
+
+      return;
+    }
+  
+    if (!email) {
+      alert('/login');
+      return;
+    }
+  
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/dashboard`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      const data = await response.json();
+
+
+      const paymentResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/pay/vip-payment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, planType: plan }),
+      });
+      
+  
+      const paymentData = await paymentResponse.json();
+  
+      if (paymentData.url) {
+        window.location.href = paymentData.url;
+      } else {
+        alert(paymentData.error || "Erro ao redirecionar para o Stripe.");
+      }
+    } catch (error) {
+      console.error("Erro ao iniciar o checkout:", error);
+      alert("Erro ao processar pagamento. Veja o console para detalhes.");
+    }
+  };
+
+  const handleFreeContentClick = (): Promise<void> => {
+    if (isAuthenticated) {
+      navigate("/");
+    } else {
+      navigate("/login");
+    }
+    return Promise.resolve();
+  };
+
+  const handleRedirect = async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get("email");
+    const planType = urlParams.get("planType");
+    const isCanceled = window.location.pathname.includes("/cancel");
+
+    if (!email || !planType) {
+      console.error("Email or planType is missing in the URL");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/update-vip-status`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            planType,
+            isVip: !isCanceled,
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Error updating VIP status");
+
+      const result = await response.json();
+      console.log(result.message);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  useEffect(() => {
+    handleRedirect();
+  }, []);
+
+  if (loading) return <Loading />;
+
+  return (
+    <div
+      className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-900"
+    >
+
+<Helmet>
+  <title>Sevenxleaks - Plans</title>
+  <link rel="canonical" href={`https://sevenxleaks.com/plans`} />
+</Helmet>
+      <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h1
+              className="text-4xl font-bold mb-4 text-gray-900"
+            >
+              Choose Your Perfect Plan
+            </h1>
+            <p
+              className="text-gray-600 text-lg max-w-2xl mx-auto"
+            >
+              Get access to exclusive content and features with our premium
+              plans. Choose the plan that best fits your needs.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="flex justify-center gap-8 mt-8 flex-wrap"
+          >
+            <div className="flex items-center gap-2 text-sm">
+              <Crown className="w-5 h-5 text-red-500" />
+              <span>Premium Content</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+/* Dreamy Theme Variables */
 :root {
-  --background: 255 255 255;
-  --foreground: 15 23 42;
+  --dreamy-white: #FFFFFF;
+  --dreamy-red: #FF5C5C;
+  --dreamy-red-light: #FF8A8A;
+  --dreamy-red-dark: #E53E3E;
+  --dreamy-gray: #F7FAFC;
+  --dreamy-gray-light: #FAFAFA;
+  --dreamy-gray-dark: #EDF2F7;
+  --dreamy-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --dreamy-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --dreamy-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --dreamy-shadow-hover: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-:root[class~="dark"] {
-  --background: 15 23 42;
-  --foreground: 255 255 255;
-}
-
-body {
-  background-color: rgb(var(--background));
-  color: rgb(var(--foreground));
-}
-
-/* Light mode styles */
-.light {
-  --bg-gradient: linear-gradient(to bottom right, #f8fafc, #f1f5f9, #e2e8f0);
-  --text-primary: #1e293b;
-  --text-secondary: #475569;
-  --border-color: #e2e8f0;
-}
-
-/* Dark mode styles */
-.dark {
-  --bg-gradient: linear-gradient(to bottom right, #0f172a, #1e293b, #334155);
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --border-color: #334155;
-}
-
-@keyframes fadeIn {
+/* Dreamy Card Animations */
+@keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
   }
   to {
     opacity: 1;
@@ -114,28 +237,312 @@ body {
   }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-in-out;
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-.zoom-80 {
-  zoom: 0.8;
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes scaleIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.2s ease-out forwards;
+.animate-fadeInUp {
+  animation: fadeInUp 0.8s ease-out forwards;
 }
 
 .animate-scaleIn {
-  animation: scaleIn 0.2s ease-out forwards;
+  animation: scaleIn 0.6s ease-out forwards;
 }
+
+/* Dreamy Page Background */
+.dreamy-page {
+  background: linear-gradient(135deg, var(--dreamy-white) 0%, var(--dreamy-gray) 50%, var(--dreamy-white) 100%);
+  min-height: 100vh;
+}
+
+/* Dreamy Section */
+.dreamy-section {
+  background: var(--dreamy-white);
+  border-radius: 24px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--dreamy-shadow-lg);
+  border: 1px solid rgba(255, 92, 92, 0.1);
+}
+
+/* Success/Error Messages */
+.dreamy-alert-success {
+  background: linear-gradient(135deg, #10B981, #34D399);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+}
+
+.dreamy-alert-error {
+  background: linear-gradient(135deg, var(--dreamy-red), var(--dreamy-red-light));
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 6px rgba(255, 92, 92, 0.3);
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.6s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Dreamy Card Styles */
+.dreamy-card {
+  background: var(--dreamy-white);
+  border-radius: 20px;
+  box-shadow: var(--dreamy-shadow);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  border: 1px solid rgba(255, 92, 92, 0.1);
+  position: relative;
+}
+
+.dreamy-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--dreamy-red), var(--dreamy-red-light));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.dreamy-card:hover::before {
+  opacity: 1;
+}
+
+.dreamy-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: var(--dreamy-shadow-hover);
+  border-color: var(--dreamy-red-light);
+}
+
+.dreamy-card-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.dreamy-card:hover .dreamy-card-image {
+  transform: scale(1.08);
+}
+
+.dreamy-card-content {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, var(--dreamy-white) 0%, var(--dreamy-gray-light) 100%);
+}
+
+.dreamy-card-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+  transition: color 0.3s ease;
+}
+
+.dreamy-card:hover .dreamy-card-title {
+  color: var(--dreamy-red);
+}
+
+.dreamy-card-category {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  background: linear-gradient(135deg, var(--dreamy-red), var(--dreamy-red-light));
+  color: white;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 2px 4px rgba(255, 92, 92, 0.3);
+}
+
+/* Dreamy Button Styles */
+.dreamy-button {
+  background: linear-gradient(135deg, var(--dreamy-red), var(--dreamy-red-light));
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 14px 28px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  box-shadow: var(--dreamy-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.dreamy-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.dreamy-button:hover::before {
+  left: 100%;
+}
+
+.dreamy-button:hover {
+  background: linear-gradient(135deg, var(--dreamy-red-dark), var(--dreamy-red));
+  transform: translateY(-3px);
+  box-shadow: var(--dreamy-shadow-lg);
+}
+
+/* Dreamy Input Styles */
+.dreamy-input {
+  background: var(--dreamy-white);
+  border: 2px solid var(--dreamy-gray-dark);
+  border-radius: 16px;
+  padding: 16px 20px;
+  transition: all 0.3s ease;
+  box-shadow: var(--dreamy-shadow);
+  font-size: 0.95rem;
+}
+
+.dreamy-input:focus {
+  border-color: var(--dreamy-red);
+  box-shadow: 0 0 0 4px rgba(255, 92, 92, 0.1);
+  outline: none;
+  transform: translateY(-2px);
+}
+
+.dreamy-input::placeholder {
+  color: #9CA3AF;
+  font-weight: 500;
+}
+
+/* Dreamy Form Styles */
+.dreamy-form {
+  background: var(--dreamy-white);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: var(--dreamy-shadow-lg);
+  border: 1px solid rgba(255, 92, 92, 0.1);
+}
+
+.dreamy-form-title {
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.dreamy-form-subtitle {
+  color: #6B7280;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-weight: 500;
+}
+
+/* Content Grid Styles */
+.dreamy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  padding: 2rem 0;
+}
+
+@media (max-width: 640px) {
+  .dreamy-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem 0;
+  }
+  
+  .dreamy-card-content {
+    padding: 1.25rem;
+  }
+  
+  .dreamy-card-image {
+    height: 180px;
+  }
+}
+
+/* Loading Animation */
+.dreamy-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem 0;
+}
+
+.dreamy-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid var(--dreamy-gray-dark);
+  border-top: 3px solid var(--dreamy-red);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+              "Personal support manager",
+              "Advanced content analytics",
+            ]}
+            buttonText="Get Annual Plan"
+            onButtonClick={() => handleAccessClick("annual")}
+            isPopular={true}
+          />
+
+          <PlanCard
+            title="FREE ACCESS"
+            price="$0.00"
+            description="Basic Features"
+            features={[
+              "Free content with ads",
+              "Basic Discord access",
+              "Standard support",
+              "Community features",
+              "Limited content access",
+              "Ad-supported experience",
+              "Standard response time",
+              "Basic analytics",
+            ]}
+            buttonText="Access Free Content"
+            onButtonClick={handleFreeContentClick}
+            isPopular={false}
+            unPopular={true}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Plans;

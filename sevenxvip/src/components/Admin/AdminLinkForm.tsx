@@ -8,6 +8,8 @@ import {
   Calendar,
   ChevronDown,
   ChevronRight,
+  Upload,
+  Image as ImageIcon,
 } from "lucide-react";
 import { LinkItem } from "../../utils/index";
 
@@ -31,6 +33,7 @@ const AdminLinkForm: React.FC<AdminLinkFormProps> = ({
   categories,
 }) => {
   const [showAdditionalLinks, setShowAdditionalLinks] = React.useState(false);
+  const [uploadingImage, setUploadingImage] = React.useState(false);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -39,8 +42,40 @@ const AdminLinkForm: React.FC<AdminLinkFormProps> = ({
     setNewLink((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", import.meta.env.VITE_UPLOAD_PRESET || "default_preset");
+      formData.append("cloud_name", import.meta.env.VITE_CLOUDY_NAME || "default_cloud");
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDY_NAME || "default_cloud"}/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+      
+      if (data.secure_url) {
+        setNewLink((prev) => ({ ...prev, thumbnail: data.secure_url }));
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   return (
-    <div className="grid gap-4 mb-6 bg-gray-800/80 p-4 rounded-lg border border-gray-700">
+    <div className="grid gap-4 mb-6 bg-gray-800/80 p-6 rounded-xl border border-gray-700">
       <h2 className="text-xl font-semibold mb-2">
         {isEditing ? "Edit Content" : "Add New Content"}
       </h2>
@@ -68,6 +103,62 @@ const AdminLinkForm: React.FC<AdminLinkFormProps> = ({
             className="w-full pl-10 pr-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
           />
         </div>
+      </div>
+      
+      {/* Thumbnail Upload Section */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-gray-300">
+          <ImageIcon className="w-5 h-5" />
+          <span>Thumbnail Image</span>
+        </div>
+        
+        <div className="flex gap-4 items-center">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              placeholder="Thumbnail URL (or upload below)"
+              name="thumbnail"
+              value={newLink.thumbnail || ""}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
+            />
+          </div>
+          
+          <div className="relative">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              id="thumbnail-upload"
+            />
+            <label
+              htmlFor="thumbnail-upload"
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors ${
+                uploadingImage
+                  ? "bg-gray-600 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              } text-white`}
+            >
+              {uploadingImage ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4" />
+              )}
+              <span>{uploadingImage ? "Uploading..." : "Upload"}</span>
+            </label>
+          </div>
+        </div>
+        
+        {newLink.thumbnail && (
+          <div className="mt-3">
+            <img
+              src={newLink.thumbnail}
+              alt="Thumbnail preview"
+              className="w-32 h-24 object-cover rounded-lg border border-gray-600"
+            />
+          </div>
+        )}
       </div>
       
       <div className="flex items-center gap-2 cursor-pointer text-gray-300 hover:text-white transition-colors" 
@@ -178,21 +269,21 @@ const AdminLinkForm: React.FC<AdminLinkFormProps> = ({
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={isEditing ? handleUpdateLink : handleAddLink}
-        disabled={isLoading}
+        disabled={isLoading || uploadingImage}
         className={`flex items-center justify-center gap-2 w-full py-2 rounded-lg transition-colors ${
-          isLoading
+          isLoading || uploadingImage
             ? "bg-gray-600 cursor-not-allowed"
             : isEditing
             ? "bg-yellow-600 hover:bg-yellow-700"
             : "bg-green-600 hover:bg-green-700"
         }`}
       >
-        {isLoading ? (
+        {isLoading || uploadingImage ? (
           <Loader2 className="w-5 h-5 animate-spin" />
         ) : (
           <Plus className="w-5 h-5" />
         )}
-        {isEditing ? "Update Content" : "Add New Content"}
+        {uploadingImage ? "Uploading Image..." : isEditing ? "Update Content" : "Add New Content"}
       </motion.button>
     </div>
   );

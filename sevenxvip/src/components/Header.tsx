@@ -32,7 +32,7 @@ const Header: React.FC = () => {
         {/* VIP Button */}
         <Link
           to="/plans"
-          className="relative group overflow-hidden px-6 py-2 rounded-lg font-bold bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:via-blue-400 hover:to-indigo-500 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-blue-500/20 hidden sm:block"
+          className="relative group overflow-hidden px-6 py-2 rounded-lg font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-red-500/20 hidden sm:block"
         >
           <span className="relative z-10 flex items-center space-x-2">
             <Sparkles className="w-4 h-4" />
@@ -44,13 +44,13 @@ const Header: React.FC = () => {
         <nav className="hidden md:flex items-center space-x-6">
           <Link
             to="/login"
-            className="text-lg font-semibold text-gray-300 hover:text-white transition duration-300"
+            className="text-lg font-semibold text-gray-300 hover:text-red-400 transition duration-300"
           >
             Login
           </Link>
           <Link
             to="/register"
-            className="text-lg font-semibold px-6 py-2 rounded-lg bg-black text-white border-2 border-gray-700 hover:border-blue-500 hover:bg-gray-900 transition-all duration-300 transform hover:scale-105 shadow-lg"
+            className="text-lg font-semibold px-6 py-2 rounded-lg bg-black text-white border-2 border-gray-700 hover:border-red-500 hover:bg-gray-900 transition-all duration-300 transform hover:scale-105 shadow-lg"
           >
             Register
           </Link>
@@ -60,6 +60,7 @@ const Header: React.FC = () => {
         {/* Mobile Menu Toggle */}
         <button
           className="md:hidden text-white focus:outline-none transform transition-all duration-300 hover:text-blue-400"
+          className="md:hidden text-white focus:outline-none transform transition-all duration-300 hover:text-red-400"
           onClick={toggleMenu}
         >
           <Menu className={`w-8 h-8 transition-transform duration-300 ${isMenuOpen ? 'rotate-90' : ''}`} />
@@ -77,14 +78,14 @@ const Header: React.FC = () => {
           </div>
           <Link
             to="/login"
-            className="block py-2 text-lg font-semibold text-center text-gray-300 hover:text-white transition duration-300"
+            className="block py-2 text-lg font-semibold text-center text-gray-300 hover:text-red-400 transition duration-300"
             onClick={toggleMenu}
           >
             Login
           </Link>
           <Link
             to="/register"
-            className="block py-2 text-lg font-semibold text-center text-gray-300 hover:text-white transition duration-300 mb-2"
+            className="block py-2 text-lg font-semibold text-center text-gray-300 hover:text-red-400 transition duration-300 mb-2"
             onClick={toggleMenu}
           >
             Register

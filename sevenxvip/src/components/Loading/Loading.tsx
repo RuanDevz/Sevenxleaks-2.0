@@ -26,14 +26,14 @@ const Loading: React.FC<LoadingProps> = ({
         <div className="relative">
           {/* Outer spinning circle */}
           <motion.div
-            className="w-16 h-16 rounded-full border-4 border-blue-500/20"
+            className="w-16 h-16 rounded-full border-4 border-red-500/20"
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
           />
           
           {/* Inner spinning circle */}
           <motion.div
-            className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500"
+            className="absolute inset-0 rounded-full border-4 border-transparent border-t-red-500"
             animate={{ rotate: -360 }}
             transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
           />
@@ -45,7 +45,7 @@ const Loading: React.FC<LoadingProps> = ({
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+            <Loader2 className="w-6 h-6 text-red-500 animate-spin" />
           </motion.div>
         </div>
 
@@ -56,14 +56,14 @@ const Loading: React.FC<LoadingProps> = ({
           transition={{ delay: 0.2 }}
           className="text-center"
         >
-          <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-600">
+          <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600">
             {text}
           </h3>
           <div className="mt-2 flex gap-1">
             {[...Array(3)].map((_, i) => (
               <motion.div
                 key={i}
-                className="w-1.5 h-1.5 rounded-full bg-blue-500"
+                className="w-1.5 h-1.5 rounded-full bg-red-500"
                 initial={{ opacity: 0.3 }}
                 animate={{ opacity: 1 }}
                 transition={{

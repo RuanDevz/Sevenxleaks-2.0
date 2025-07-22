@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
-import { Search, Calendar, LayoutGrid, SortDesc, ChevronDown } from "lucide-react";
+import { Search, Calendar, LayoutGrid, SortDesc, ChevronDown, Crown, Sparkles, Filter, Star } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
+import ContentCard from "../components/ContentCard";
+import { motion } from "framer-motion";
+import { Helmet } from "react-helmet";
 
 type LinkItem = {
   id: string;
@@ -11,6 +14,7 @@ type LinkItem = {
   postDate: string;
   slug: string;
   link: string;
+  thumbnail?: string;
   linkP?: string;
   linkG?: string;
   linkMV1?: string;
@@ -23,14 +27,6 @@ type Category = {
   id: string;
   name: string;
   category: string;
-};
-
-type PaginatedResponse = {
-  page: number;
-  perPage: number;
-  total: number;
-  totalPages: number;
-  data: LinkItem[];
 };
 
 const months = [
@@ -49,8 +45,13 @@ const months = [
   { value: "12", label: "December" },
 ];
 
+const DreamyLoading = () => (
+  <div className="dreamy-loading">
+    <div className="dreamy-spinner"></div>
+  </div>
+);
+
 const VIPContent: React.FC = () => {
-  const { theme } = useTheme();
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [filteredLinks, setFilteredLinks] = useState<LinkItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -64,83 +65,81 @@ const VIPContent: React.FC = () => {
   const [hasMoreContent, setHasMoreContent] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
-  
 
   useEffect(() => {
     document.title = "VIP Content - Sevenxleaks";
   }, []);
 
-const fetchContent = async (page: number, isLoadMore = false) => {
-  try {
-    setLoading(true);
+  const fetchContent = async (page: number, isLoadMore = false) => {
+    try {
+      if (!isLoadMore) setLoading(true);
+      setSearchLoading(true);
 
-    const params = new URLSearchParams({
-      page: page.toString(),
-      search: searchName,
-      category: selectedCategory,
-      month: selectedMonth,
-      sortBy: 'postDate',
-      sortOrder: sortOption === 'mostRecent' ? 'DESC' : 'ASC',
-      limit: '900'
-    });
+      const params = new URLSearchParams({
+        page: page.toString(),
+        search: searchName,
+        category: selectedCategory,
+        month: selectedMonth,
+        sortBy: 'postDate',
+        sortOrder: sortOption === 'mostRecent' ? 'DESC' : 'ASC',
+        limit: '24'
+      });
 
-    const response = await axios.get<{ data: string }>(
-      `${import.meta.env.VITE_BACKEND_URL}/vipcontent/search?${params}`,
-      {
-        headers: {
-          'x-api-key': `${import.meta.env.VITE_FRONTEND_API_KEY}`
+      const response = await axios.get<{ data: string }>(
+        `${import.meta.env.VITE_BACKEND_URL}/vipcontent/search?${params}`,
+        {
+          headers: {
+            'x-api-key': `${import.meta.env.VITE_FRONTEND_API_KEY}`
+          }
         }
+      );
+
+      if (!response.data || !response.data.data) {
+        throw new Error('Invalid server response');
       }
-    );
 
-    if (!response.data || !response.data.data) {
-      throw new Error('Resposta inválida do servidor');
+      const decoded = decodeModifiedBase64(response.data.data);
+      const { data, totalPages } = decoded as { data: LinkItem[]; totalPages: number };
+
+      if (isLoadMore) {
+        setLinks(prev => [...prev, ...data]);
+        setFilteredLinks(prev => [...prev, ...data]);
+      } else {
+        setLinks(data);
+        setFilteredLinks(data);
+      }
+
+      setTotalPages(totalPages);
+      setHasMoreContent(page < totalPages);
+
+      const uniqueCategories = Array.from(
+        new Set(data.map((item: LinkItem) => item.category))
+      ).map((category: string) => ({
+        id: category,
+        name: category,
+        category: category,
+      }));
+
+      setCategories(prev => {
+        const existingCategories = new Set(prev.map(c => c.category));
+        const newCategories = uniqueCategories.filter(c => !existingCategories.has(c.category));
+        return [...prev, ...newCategories];
+      });
+
+    } catch (error) {
+      console.error("Error fetching content:", error);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+      setSearchLoading(false);
     }
+  };
 
-    const decoded = decodeModifiedBase64(response.data.data);
-    const { data, totalPages } = decoded as { data: LinkItem[]; totalPages: number };
-
-    if (isLoadMore) {
-      setLinks(prev => [...prev, ...data]);
-      setFilteredLinks(prev => [...prev, ...data]);
-    } else {
-      setLinks(data);
-      setFilteredLinks(data);
-    }
-
-    setTotalPages(totalPages);
-    setHasMoreContent(page < totalPages);
-
-    const uniqueCategories = Array.from(
-      new Set(data.map((item: LinkItem) => item.category))
-    ).map((category: string) => ({
-      id: category,
-      name: category,
-      category: category,
-    }));
-
-    setCategories(prev => {
-      const existingCategories = new Set(prev.map(c => c.category));
-      const newCategories = uniqueCategories.filter(c => !existingCategories.has(c.category));
-      return [...prev, ...newCategories];
-    });
-
-  } catch (error) {
-    console.error("Error fetching content:", error);
-  } finally {
-    setLoading(false);
-    setLoadingMore(false);
-    setSearchLoading(false);
+  function decodeModifiedBase64(encodedStr: string): any {
+    const fixedBase64 = encodedStr.slice(0, 2) + encodedStr.slice(3);
+    const jsonString = atob(fixedBase64);
+    return JSON.parse(jsonString);
   }
-};
-
-function decodeModifiedBase64(encodedStr: string): any {
-  const fixedBase64 = encodedStr.slice(0, 2) + encodedStr.slice(3);
-  const jsonString = atob(fixedBase64);
-  return JSON.parse(jsonString);
-}
-
-
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -160,72 +159,131 @@ function decodeModifiedBase64(encodedStr: string): any {
     fetchContent(nextPage, true);
   };
 
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
-      timeZone: "America/Sao_Paulo"
-    });
-  };
-
-const groupedLinks: { [key: string]: LinkItem[] } = {};
-
-filteredLinks.forEach((link) => {
-  const formattedDate = formatDate(link.postDate);
-  if (!groupedLinks[formattedDate]) {
-    groupedLinks[formattedDate] = [];
-  }
-  groupedLinks[formattedDate].push(link);
-});
-
   const recentLinks = filteredLinks.slice(0, 5);
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-gray-50 via-white to-gray-100'} zoom-80`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 mb-4 animate-gradient">
-            VIP Content
-          </h1>
-          <p className={`text-lg max-w-2xl mx-auto ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-            Enjoy exclusive VIP content and premium features
-          </p>
-        </div>
+    <div className="dreamy-page">
+      <Helmet>
+        <title>VIP Content - Sevenxleaks</title>
+        <link rel="canonical" href="https://sevenxleaks.com/vip" />
+      </Helmet>
 
-        <div className={`${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-3xl shadow-2xl p-8 mb-12 border`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* VIP Header Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="text-center mb-16"
+        >
+          <motion.div 
+            className="inline-flex items-center gap-4 mb-6"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Crown className="w-12 h-12 text-yellow-500" />
+            </motion.div>
+            <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-600 to-red-700">
+              VIP Content
+            </h1>
+            <motion.div
+              animate={{ rotate: [0, -10, 10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+            >
+              <Crown className="w-12 h-12 text-yellow-500" />
+            </motion.div>
+          </motion.div>
+          
+          <motion.p 
+            className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            Exclusive premium content just for VIP members. Enjoy ad-free experience and early access to new releases.
+          </motion.p>
+          
+          {/* VIP Benefits Banner */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="dreamy-section max-w-4xl mx-auto"
+          >
+            <div className="flex items-center justify-center gap-8 flex-wrap">
+              <motion.div 
+                className="flex items-center gap-3"
+                whileHover={{ scale: 1.05 }}
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-lg font-semibold text-gray-700">Ad-Free Experience</span>
+              </motion.div>
+              
+              <motion.div 
+                className="flex items-center gap-3"
+                whileHover={{ scale: 1.05 }}
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center">
+                  <Crown className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-lg font-semibold text-gray-700">Exclusive Content</span>
+              </motion.div>
+              
+              <motion.div 
+                className="flex items-center gap-3"
+                whileHover={{ scale: 1.05 }}
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <Star className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-lg font-semibold text-gray-700">Early Access</span>
+              </motion.div>
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Search and Filter Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="dreamy-section mb-12"
+        >
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+            <Filter className="w-6 h-6 text-red-500" />
+            Search & Filter VIP Content
+          </h2>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="relative group">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-red-500 transition-colors" />
               <input
                 type="text"
                 placeholder="Search by name..."
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
-                className={`w-full pl-12 pr-4 py-3.5 rounded-xl border focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 ${
-                  theme === 'dark'
-                    ? 'bg-gray-900 border-gray-700 text-gray-200 placeholder-gray-400'
-                    : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500'
-                }`}
+                className="dreamy-input w-full pl-12 pr-4 text-gray-900 placeholder-gray-500"
               />
               {searchLoading && (
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500"></div>
+                  <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
                 </div>
               )}
             </div>
 
             <div className="relative group">
-              <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
+              <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-red-500 transition-colors" />
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className={`w-full pl-12 pr-4 py-3.5 rounded-xl border focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 appearance-none cursor-pointer ${
-                  theme === 'dark'
-                    ? 'bg-gray-900 border-gray-700 text-gray-200'
-                    : 'bg-gray-50 border-gray-200 text-gray-900'
-                }`}
+                className="dreamy-input w-full pl-12 pr-4 appearance-none cursor-pointer text-gray-900"
               >
                 {months.map((month) => (
                   <option key={month.value} value={month.value}>
@@ -236,15 +294,11 @@ filteredLinks.forEach((link) => {
             </div>
 
             <div className="relative group">
-              <LayoutGrid className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
+              <LayoutGrid className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-red-500 transition-colors" />
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className={`w-full pl-12 pr-4 py-3.5 rounded-xl border focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 appearance-none cursor-pointer ${
-                  theme === 'dark'
-                    ? 'bg-gray-900 border-gray-700 text-gray-200'
-                    : 'bg-gray-50 border-gray-200 text-gray-900'
-                }`}
+                className="dreamy-input w-full pl-12 pr-4 appearance-none cursor-pointer text-gray-900"
               >
                 <option value="">All Categories</option>
                 {categories.map((category) => (
@@ -256,135 +310,89 @@ filteredLinks.forEach((link) => {
             </div>
 
             <div className="relative group">
-              <SortDesc className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
+              <SortDesc className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-red-500 transition-colors" />
               <select
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value)}
-                className={`w-full pl-12 pr-4 py-3.5 rounded-xl border focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 appearance-none cursor-pointer ${
-                  theme === 'dark'
-                    ? 'bg-gray-900 border-gray-700 text-gray-200'
-                    : 'bg-gray-50 border-gray-200 text-gray-900'
-                }`}
+                className="dreamy-input w-full pl-12 pr-4 appearance-none cursor-pointer text-gray-900"
               >
                 <option value="mostRecent">Most Recent</option>
                 <option value="oldest">Oldest</option>
               </select>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="space-y-8">
+        {/* Content Grid */}
+        <div className="space-y-12">
           {loading ? (
-            <div className="flex justify-center items-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-          ) : Object.keys(groupedLinks).length > 0 ? (
+            <DreamyLoading />
+          ) : filteredLinks.length > 0 ? (
             <>
-              {Object.keys(groupedLinks)
-              .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
-              .map((date) => (          
-                <div 
-                  key={date} 
-                  className={`${
-                    theme === 'dark'
-                      ? 'bg-gray-800 border-gray-700'
-                      : 'bg-white border-gray-200'
-                  } rounded-3xl shadow-2xl overflow-hidden border`}
-                >
-                  <div className={`${
-                    theme === 'dark'
-                      ? 'bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border-gray-700'
-                      : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-gray-200'
-                  } px-8 py-4 border-b`}>
-                    <h3 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                      {date}
-                    </h3>
-                  </div>
-                  <div className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-200'}`}>
-                    {groupedLinks[date].map((link: LinkItem) => (
-                      <div 
-                        key={link.id} 
-                        className={`px-6 py-4 transition-colors duration-200 ${
-                          theme === 'dark' 
-                            ? 'hover:bg-gray-700/50' 
-                            : 'hover:bg-gray-50'
-                        }`}
-                      >
-                        <Link
-                          to={`/vip/${link.slug}`}
-                          className="flex items-center justify-between group"
-                        >
-                          <span className={`text-lg transition-colors duration-200 ${
-                            theme === 'dark'
-                              ? 'text-gray-200 group-hover:text-blue-400'
-                              : 'text-gray-700 group-hover:text-blue-600'
-                          }`}>
-                            {link.name}
-                          </span>
-                          {recentLinks.includes(link) && (
-                            <span className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20">
-                              NEW
-                            </span>
-                          )}
-                        </Link>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+                className="dreamy-grid"
+              >
+                {filteredLinks.map((link: LinkItem, index: number) => (
+                  <ContentCard
+                    key={link.id}
+                    id={link.id}
+                    name={link.name}
+                    category={link.category}
+                    postDate={link.postDate}
+                    slug={link.slug}
+                    thumbnail={link.thumbnail}
+                    isVip={true}
+                    isNew={recentLinks.includes(link)}
+                    index={index}
+                  />
+                ))}
+              </motion.div>
               
               {hasMoreContent && (
-                <div className="flex justify-center mt-8">
-                  <button
+                <div className="flex justify-center mt-12">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={handleLoadMore}
                     disabled={loadingMore}
-                    className={`px-8 py-3.5 flex items-center justify-center space-x-2 rounded-xl font-medium text-white transition-all duration-300 shadow-lg hover:shadow-xl ${
-                      loadingMore 
-                        ? 'bg-gray-400' 
-                        : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700'
+                    className={`dreamy-button px-8 py-4 text-lg flex items-center gap-3 ${
+                      loadingMore ? 'opacity-75 cursor-not-allowed' : ''
                     }`}
                   >
                     {loadingMore ? (
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Loading...</span>
+                      </>
                     ) : (
                       <>
-                        <span>More Leaks</span>
+                        <span>Load More VIP Content</span>
                         <ChevronDown className="w-5 h-5" />
                       </>
                     )}
-                  </button>
+                  </motion.button>
                 </div>
               )}
             </>
           ) : (
-            <div className={`text-center py-16 rounded-3xl border ${
-              theme === 'dark'
-                ? 'bg-gray-800 border-gray-700'
-                : 'bg-white border-gray-200'
-            }`}>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="dreamy-section text-center py-16"
+            >
               <div className="text-gray-400 mb-6">
                 <Search className="w-16 h-16 mx-auto" />
               </div>
-              <h3 className={`text-2xl font-bold mb-3 ${
-                theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}>
-                No Content Found
+              <h3 className="text-2xl font-bold mb-3 text-gray-900">
+                No VIP Content Found
               </h3>
-              <p className="text-gray-400">
-                Try adjusting your search or filters
+              <p className="text-gray-600">
+                Try adjusting your search or filters to find what you're looking for.
               </p>
-            </div>
-          )}
-          
-          {loadingMore && (
-            <div className="flex justify-center py-8">
-              <div className="flex flex-col items-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mb-3"></div>
-                <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Loading more leaks...
-                </p>
-              </div>
-            </div>
+            </motion.div>
           )}
         </div>
       </div>

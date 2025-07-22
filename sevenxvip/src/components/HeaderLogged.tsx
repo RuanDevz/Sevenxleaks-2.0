@@ -72,7 +72,7 @@ const HeaderLogged: React.FC = () => {
               {isVip ? (
                 <Link
                   to="/vip"
-                  className="relative group overflow-hidden px-4 py-2 rounded-lg font-bold bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:via-blue-400 hover:to-indigo-500 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-blue-500/20"
+                  className="relative group overflow-hidden px-4 py-2 rounded-lg font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-red-500/20"
                 >
                   <span className="relative z-10 flex items-center space-x-2">
                     <Sparkles className="w-4 h-4" />
@@ -83,7 +83,7 @@ const HeaderLogged: React.FC = () => {
               ) : (
                 <Link
                   to="/plans"
-                  className="relative group overflow-hidden px-6 py-2 rounded-lg font-bold bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:via-blue-400 hover:to-indigo-500 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-blue-500/20"
+                  className="relative group overflow-hidden px-6 py-2 rounded-lg font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-red-500/20"
                 >
                   <span className="relative z-10 flex items-center space-x-2">
                     <Sparkles className="w-4 h-4" />
@@ -159,7 +159,7 @@ const HeaderLogged: React.FC = () => {
                 {isVip ? (
                   <Link
                     to="/vip"
-                    className="block w-full px-4 py-3 rounded-lg text-center font-bold bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:via-blue-400 hover:to-indigo-500 transition-all duration-300"
+                    className="block w-full px-4 py-3 rounded-lg text-center font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all duration-300"
                   >
                     <span className="flex items-center justify-center space-x-2">
                       <Sparkles className="w-4 h-4" />
@@ -169,7 +169,7 @@ const HeaderLogged: React.FC = () => {
                 ) : (
                   <Link
                     to="/plans"
-                    className="block w-full px-4 py-3 rounded-lg text-center font-bold bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:via-blue-400 hover:to-indigo-500 transition-all duration-300"
+                    className="block w-full px-4 py-3 rounded-lg text-center font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all duration-300"
                   >
                     <span className="flex items-center justify-center space-x-2">
                       <Sparkles className="w-4 h-4" />

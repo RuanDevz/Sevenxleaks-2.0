@@ -43,10 +43,10 @@ const PlanCard: React.FC<PlanCardProps> = ({
       transition={{ duration: 0.3 }}
       className={`relative rounded-2xl overflow-hidden ${
         isPopular
-          ? "bg-gradient-to-b from-yellow-50 to-yellow-100 border-2 border-yellow-300 transform scale-105"
+          ? "bg-gradient-to-b from-red-50 to-red-100 border-2 border-red-300 transform scale-105"
           : unPopular
           ? "bg-gradient-to-b from-gray-50 to-gray-100 border border-gray-200"
-          : "bg-gradient-to-b from-blue-50 to-blue-100 border border-blue-200"
+          : "bg-gradient-to-b from-white to-gray-50 border border-gray-200"
       } shadow-xl hover:shadow-2xl transition-all duration-300`}
     >
       {isPopular && (
@@ -55,7 +55,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg"
+            className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg"
           >
             <Crown className="w-3.5 h-3.5" />
             MOST POPULAR
@@ -66,14 +66,14 @@ const PlanCard: React.FC<PlanCardProps> = ({
       <div className="p-8">
         <div className="flex flex-col items-center mb-6">
           <h2 className={`text-2xl font-bold mb-2 ${
-            isPopular ? "text-yellow-900" : unPopular ? "text-gray-700" : "text-blue-900"
+            isPopular ? "text-red-900" : unPopular ? "text-gray-700" : "text-gray-900"
           }`}>
             {title}
           </h2>
           <p className="text-gray-600 text-sm text-center">{description}</p>
           <div className="mt-4 flex items-baseline">
             <span className={`text-4xl font-bold ${
-              isPopular ? "text-yellow-900" : unPopular ? "text-gray-900" : "text-blue-900"
+              isPopular ? "text-red-900" : unPopular ? "text-gray-900" : "text-gray-900"
             }`}>
               {price}
             </span>
@@ -97,7 +97,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
                   <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                 ) : (
                   <CheckCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                    isPopular ? "text-yellow-500" : "text-green-500"
+                    isPopular ? "text-red-500" : "text-green-500"
                   }`} />
                 )}
                 <span className={`text-sm ${
@@ -119,10 +119,10 @@ const PlanCard: React.FC<PlanCardProps> = ({
             isLoading
               ? "opacity-75 cursor-not-allowed"
               : isPopular
-              ? "bg-yellow-400 hover:bg-yellow-500 text-yellow-900"
+              ? "bg-red-500 hover:bg-red-600 text-white"
               : unPopular
               ? "bg-gray-200 hover:bg-gray-300 text-gray-700"
-              : "bg-blue-500 hover:bg-blue-600 text-white"
+              : "bg-red-500 hover:bg-red-600 text-white"
           }`}
         >
           {isLoading ? (
