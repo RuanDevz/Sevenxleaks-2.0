@@ -183,20 +183,6 @@ const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({
             </button>
           )}
           
-          {userData.isVip && isSubscriptionActive && !isCanceling && (
-            <button
-              onClick={() => setShowCancelModal(true)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 ${
-                isDark
-                  ? "bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20" 
-                  : "bg-red-50 text-red-600 border border-red-100 hover:bg-red-100"
-              }`}
-            >
-              <XCircle size={16} />
-              Cancel Subscription
-            </button>
-          )}
-          
           {isCanceling && (
             <button
               className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 ${
