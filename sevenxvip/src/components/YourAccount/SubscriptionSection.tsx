@@ -169,18 +169,32 @@ const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({
           </Link>
           
           {userData.isVip && userData.stripeSubscriptionId && (
-            <button
-              onClick={handleManageSubscription}
-              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 ${
-                isDark
-                  ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20" 
-                  : "bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100"
-              }`}
-            >
-              <Settings size={16} />
-              Manage Subscription
-              <ExternalLink size={14} />
-            </button>
+            <>
+              <button
+                onClick={() => setShowCancelModal(true)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 ${
+                  isDark
+                    ? "bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20" 
+                    : "bg-red-50 text-red-600 border border-red-100 hover:bg-red-100"
+                }`}
+              >
+                <XCircle size={16} />
+                Cancel Subscription
+              </button>
+              
+              <button
+                onClick={handleManageSubscription}
+                className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 ${
+                  isDark
+                    ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20" 
+                    : "bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100"
+                }`}
+              >
+                <Settings size={16} />
+                Manage Subscription
+                <ExternalLink size={14} />
+              </button>
+            </>
           )}
           
           {isCanceling && (
