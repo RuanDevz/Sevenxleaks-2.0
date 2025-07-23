@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Crown, Calendar, CheckCircle, XCircle, Sparkles, AlertTriangle } from "lucide-react";
+import { Crown, Calendar, CheckCircle, XCircle, Sparkles, AlertTriangle, Settings, ExternalLink } from "lucide-react";
 import { Userdatatypes } from "../../../types/Userdatatypes";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -20,6 +20,32 @@ const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({
   const { theme } = useTheme();
   
   const isDark = theme === "dark";
+  
+  const handleManageSubscription = async () => {
+    try {
+      const token = localStorage.getItem('Token');
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/stripe-portal/create-portal-session`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.url) {
+        // Redirecionar para o Customer Portal da Stripe
+        window.open(data.url, '_blank');
+      } else {
+        console.error('Erro ao criar sessão do portal:', data.error);
+        alert('Erro ao acessar o portal de gerenciamento. Tente novamente.');
+      }
+    } catch (error) {
+      console.error('Erro ao criar sessão do portal:', error);
+      alert('Erro ao acessar o portal de gerenciamento. Tente novamente.');
+    }
+  };
   
   return (
     <div className={`overflow-hidden rounded-2xl transition-colors duration-300 ${
@@ -141,6 +167,21 @@ const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({
               {userData.isVip ? "Change Plan" : "Upgrade to VIP"}
             </button>
           </Link>
+          
+          {userData.isVip && userData.stripeSubscriptionId && (
+            <button
+              onClick={handleManageSubscription}
+              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 ${
+                isDark
+                  ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20" 
+                  : "bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100"
+              }`}
+            >
+              <Settings size={16} />
+              Manage Subscription
+              <ExternalLink size={14} />
+            </button>
+          )}
           
           {userData.isVip && isSubscriptionActive && !isCanceling && (
             <button
