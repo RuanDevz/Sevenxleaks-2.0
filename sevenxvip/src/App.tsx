@@ -25,6 +25,10 @@ import ViewStats from "./pages/Viewstats";
 import ViewRequests from "./pages/ViewRequests";
 import AccessDenied from "./pages/AccessDenied";
 import AdminDisabledVipUsers from "./pages/AdminDisabledVipUsers";
+import BannedContent from "./pages/BannedContent";
+import UnknownContent from "./pages/UnknownContent";
+import BannedContentDetails from "./pages/BannedContentDetails";
+import UnknownContentDetails from "./pages/UnknownContentDetails";
 
 interface User {
   isAdmin: boolean;
@@ -174,6 +178,11 @@ const App = () => {
                 )
               } 
             />
+            
+            <Route path="/banned" element={<BannedContent />} />
+            <Route path="/unknown" element={<UnknownContent />} />
+            <Route path="/banned/:slug" element={<BannedContentDetails />} />
+            <Route path="/unknown/:slug" element={<UnknownContentDetails />} />
             
             <Route path="/plans" element={<Plans />} />
             <Route path="/login" element={<Login />} />

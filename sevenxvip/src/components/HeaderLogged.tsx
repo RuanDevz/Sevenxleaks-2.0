@@ -5,6 +5,8 @@ import { Sparkles, Flame, Disc as Discord, Menu, X } from 'lucide-react';
 import UserMenu from "../components/HeaderLogged/UserMenu";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "./ThemeToggle";
+import RegionToggle from "./RegionToggle";
+import { useRegion } from "../contexts/RegionContext";
 
 const HeaderLogged: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -14,6 +16,7 @@ const HeaderLogged: React.FC = () => {
   const token = localStorage.getItem("Token");
   const name = localStorage.getItem("name");
   const email = localStorage.getItem("email");
+  const { region } = useRegion();
 
   const handleMenuToggle = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -57,6 +60,9 @@ const HeaderLogged: React.FC = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
+            {/* Region Toggle */}
+            <RegionToggle />
+            
             {/* Premium Banner */}
             <div className="bg-gradient-to-r from-gray-800/80 to-gray-800/60 backdrop-blur-sm px-4 py-2 rounded-full text-center flex items-center space-x-3 border border-gray-700/50 shadow-xl">
               <button
@@ -69,10 +75,32 @@ const HeaderLogged: React.FC = () => {
 
             {/* VIP/Discord Buttons */}
             <div className="flex items-center space-x-4">
+              {/* Asian Region Buttons */}
+              {region === 'asian' && (
+                <div className="flex items-center space-x-2">
+                  <Link
+                    to="/banned"
+                    className="px-4 py-2 rounded-lg font-medium bg-purple-600 hover:bg-purple-700 text-white transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  >
+                    Banned
+                  </Link>
+                  <Link
+                    to="/unknown"
+                    className="px-4 py-2 rounded-lg font-medium bg-purple-600 hover:bg-purple-700 text-white transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  >
+                    Unknown
+                  </Link>
+                </div>
+              )}
+              
               {isVip ? (
                 <Link
                   to="/vip"
-                  className="relative group overflow-hidden px-4 py-2 rounded-lg font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-red-500/20"
+                  className={`relative group overflow-hidden px-4 py-2 rounded-lg font-bold transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                    region === 'asian' 
+                      ? 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 shadow-purple-500/20'
+                      : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-orange-500/20'
+                  }`}
                 >
                   <span className="relative z-10 flex items-center space-x-2">
                     <Sparkles className="w-4 h-4" />
@@ -83,7 +111,11 @@ const HeaderLogged: React.FC = () => {
               ) : (
                 <Link
                   to="/plans"
-                  className="relative group overflow-hidden px-6 py-2 rounded-lg font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-red-500/20"
+                  className={`relative group overflow-hidden px-6 py-2 rounded-lg font-bold transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                    region === 'asian' 
+                      ? 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 shadow-purple-500/20'
+                      : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-orange-500/20'
+                  }`}
                 >
                   <span className="relative z-10 flex items-center space-x-2">
                     <Sparkles className="w-4 h-4" />
@@ -147,6 +179,11 @@ const HeaderLogged: React.FC = () => {
               <div className="py-4 space-y-4">
                 {/* Mobile Premium Banner */}
                 <div className="bg-gradient-to-r from-gray-800/80 to-gray-800/60 backdrop-blur-sm p-4 rounded-lg text-center space-y-3 border border-gray-700/50 shadow-xl">
+                  {/* Mobile Region Toggle */}
+                  <div className="flex justify-center mb-3">
+                    <RegionToggle />
+                  </div>
+                  
                   <button
                     onClick={() => window.open("https://sevenxhub.com", "_blank")}
                     className="w-full px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold hover:from-blue-600 hover:to-indigo-700 transition duration-300"
@@ -155,11 +192,33 @@ const HeaderLogged: React.FC = () => {
                   </button>
                 </div>
 
+                {/* Mobile Asian Region Buttons */}
+                {region === 'asian' && (
+                  <div className="space-y-3">
+                    <Link
+                      to="/banned"
+                      className="block w-full px-4 py-3 rounded-lg text-center font-bold bg-purple-600 hover:bg-purple-700 transition-all duration-300"
+                    >
+                      Banned Content
+                    </Link>
+                    <Link
+                      to="/unknown"
+                      className="block w-full px-4 py-3 rounded-lg text-center font-bold bg-purple-600 hover:bg-purple-700 transition-all duration-300"
+                    >
+                      Unknown Content
+                    </Link>
+                  </div>
+                )}
+
                 {/* Mobile VIP Button */}
                 {isVip ? (
                   <Link
                     to="/vip"
-                    className="block w-full px-4 py-3 rounded-lg text-center font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all duration-300"
+                    className={`block w-full px-4 py-3 rounded-lg text-center font-bold transition-all duration-300 ${
+                      region === 'asian' 
+                        ? 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
+                        : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
+                    }`}
                   >
                     <span className="flex items-center justify-center space-x-2">
                       <Sparkles className="w-4 h-4" />
@@ -169,7 +228,11 @@ const HeaderLogged: React.FC = () => {
                 ) : (
                   <Link
                     to="/plans"
-                    className="block w-full px-4 py-3 rounded-lg text-center font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all duration-300"
+                    className={`block w-full px-4 py-3 rounded-lg text-center font-bold transition-all duration-300 ${
+                      region === 'asian' 
+                        ? 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
+                        : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
+                    }`}
                   >
                     <span className="flex items-center justify-center space-x-2">
                       <Sparkles className="w-4 h-4" />

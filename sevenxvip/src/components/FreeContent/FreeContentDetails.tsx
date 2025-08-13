@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useRegion } from "../../contexts/RegionContext";
 import { Calendar, Tag, ArrowLeft } from "lucide-react";
 import Loading from "../../components/Loading/Loading";
 import DownloadOptions from "../../components/DownloadOptions";
@@ -31,6 +32,8 @@ const FreeContentDetails = () => {
   const [error, setError] = useState<string | null>(null);
   const [linkvertiseAccount, setLinkvertiseAccount] = useState<string>('518238');
   const { theme } = useTheme();
+  const { region, getThemeColors } = useRegion();
+  const colors = getThemeColors();
 
   // Busca a configuração global da conta do Linkvertise
   useEffect(() => {
@@ -156,7 +159,7 @@ const FreeContentDetails = () => {
         <title>Sevenxleaks - {content.name}</title>
         <link rel="canonical" href={`https://sevenxleaks.com/free/${content.slug}`} />
       </Helmet>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         <Link 
           to="/" 
           className={`inline-flex items-center gap-2 mb-6 text-sm font-medium transition-colors ${theme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
@@ -166,12 +169,20 @@ const FreeContentDetails = () => {
         </Link>
 
         <div className={`${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-3xl shadow-2xl overflow-hidden border transition-all duration-300 hover:shadow-xl`}>
-          <div className={`${theme === 'dark' ? 'bg-gradient-to-r from-blue-900/30 to-indigo-900/30' : 'bg-gradient-to-r from-blue-50 to-indigo-50'} px-8 py-6 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
-            <h1 className={`text-2xl sm:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+          <div className={`${
+            theme === 'dark' 
+              ? region === 'asian' 
+                ? 'bg-gradient-to-r from-purple-900/30 to-purple-800/30' 
+                : 'bg-gradient-to-r from-orange-900/30 to-orange-800/30'
+              : region === 'asian'
+                ? 'bg-gradient-to-r from-purple-50 to-purple-100'
+                : 'bg-gradient-to-r from-orange-50 to-orange-100'
+          } px-4 sm:px-8 py-4 sm:py-6 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+            <h1 className={`text-xl sm:text-2xl md:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               {content.name}
             </h1>
             
-            <div className="flex flex-wrap items-center gap-4 mt-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-3 sm:mt-4">
               <div className="flex items-center gap-2">
                 <Calendar className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
                 <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -181,15 +192,23 @@ const FreeContentDetails = () => {
               
               <div className="flex items-center gap-2">
                 <Tag className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${theme === 'dark' ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-100 text-blue-800'}`}>
+                <span className={`inline-flex px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${
+                  theme === 'dark' 
+                    ? region === 'asian'
+                      ? 'bg-purple-500/20 text-purple-300'
+                      : 'bg-orange-500/20 text-orange-300'
+                    : region === 'asian'
+                      ? 'bg-purple-100 text-purple-800'
+                      : 'bg-orange-100 text-orange-800'
+                }`}>
                   {content.category}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="p-8">
-            <h2 className={`text-xl font-semibold mb-6 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
+          <div className="p-4 sm:p-6 lg:p-8">
+            <h2 className={`text-lg sm:text-xl font-semibold mb-4 sm:mb-6 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
               Download Options
             </h2>
             

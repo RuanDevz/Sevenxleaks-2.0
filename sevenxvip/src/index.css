@@ -275,7 +275,7 @@ const Plans: React.FC = () => {
 .dreamy-section {
   background: var(--dreamy-white);
   border-radius: 24px;
-  padding: 2rem;
+  padding: 1.5rem;
   margin-bottom: 2rem;
   box-shadow: var(--dreamy-shadow-lg);
   border: 1px solid rgba(255, 92, 92, 0.1);
@@ -353,7 +353,7 @@ const Plans: React.FC = () => {
 }
 
 .dreamy-card-content {
-  padding: 1.5rem;
+  padding: 1.25rem;
   background: linear-gradient(135deg, var(--dreamy-white) 0%, var(--dreamy-gray-light) 100%);
 }
 
@@ -471,23 +471,28 @@ const Plans: React.FC = () => {
 .dreamy-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 2rem;
-  padding: 2rem 0;
+  gap: 1.5rem;
+  padding: 1.5rem 0;
 }
 
 @media (max-width: 640px) {
   .dreamy-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
-    padding: 1.5rem 0;
+    gap: 1rem;
+    padding: 1rem 0;
   }
   
   .dreamy-card-content {
-    padding: 1.25rem;
+    padding: 1rem;
   }
   
   .dreamy-card-image {
     height: 180px;
+  }
+  
+  .dreamy-section {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
   }
 }
 

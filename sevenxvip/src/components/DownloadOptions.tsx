@@ -1,5 +1,6 @@
 import React from 'react';
 import DownloadButton from './DownloadButton';
+import { useRegion } from '../contexts/RegionContext';
 import MEGA from '../assets/MEGA.png';
 import Pixeldrain from '../assets/pixeldrain.png';
 import Gofile from '../assets/Gofile.jpg';
@@ -18,6 +19,9 @@ interface DownloadOptionsProps {
 }
 
 const DownloadOptions: React.FC<DownloadOptionsProps> = ({ primaryLinks, mirrorLinks }) => {
+  const { region, getThemeColors } = useRegion();
+  const colors = getThemeColors();
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <DownloadButton
@@ -25,8 +29,8 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({ primaryLinks, mirrorL
         fallbackUrl={mirrorLinks.mega}
         label="MEGA"
         icon={MEGA}
-        bgColor="bg-red-600"
-        hoverColor="hover:bg-red-700"
+        bgColor={colors.primary}
+        hoverColor={colors.primaryHover}
       />
       
       <DownloadButton
@@ -34,8 +38,8 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({ primaryLinks, mirrorL
         fallbackUrl={mirrorLinks.pixeldrain}
         label="Pixeldrain"
         icon={Pixeldrain}
-        bgColor="bg-black"
-        hoverColor="hover:bg-gray-900"
+        bgColor={colors.primary}
+        hoverColor={colors.primaryHover}
       />
       
       <DownloadButton
@@ -43,8 +47,8 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({ primaryLinks, mirrorL
         fallbackUrl={mirrorLinks.gofile}
         label="Gofile"
         icon={Gofile}
-        bgColor="bg-[#353a40]"
-        hoverColor="hover:bg-[#454B52]"
+        bgColor={colors.primary}
+        hoverColor={colors.primaryHover}
       />
     </div>
   );

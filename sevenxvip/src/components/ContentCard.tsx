@@ -11,6 +11,8 @@ interface ContentCardProps {
   slug: string;
   thumbnail?: string;
   isVip?: boolean;
+  isBanned?: boolean;
+  isUnknown?: boolean;
   isNew?: boolean;
   index?: number;
 }
@@ -22,6 +24,8 @@ const ContentCard: React.FC<ContentCardProps> = ({
   slug,
   thumbnail,
   isVip = false,
+  isBanned = false,
+  isUnknown = false,
   isNew = false,
   index = 0
 }) => {
@@ -36,6 +40,13 @@ const ContentCard: React.FC<ContentCardProps> = ({
 
   const defaultThumbnail = "https://images.pexels.com/photos/1591056/pexels-photo-1591056.jpeg?auto=compress&cs=tinysrgb&w=400";
 
+  const getCardLink = () => {
+    if (isBanned) return `/banned/${slug}`;
+    if (isUnknown) return `/unknown/${slug}`;
+    if (isVip) return `/vip/${slug}`;
+    return `/free/${slug}`;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -47,7 +58,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
       }}
       className="dreamy-card group cursor-pointer"
     >
-      <Link to={isVip ? `/vip/${slug}` : `/free/${slug}`} className="block h-full">
+      <Link to={getCardLink()} className="block h-full">
         <div className="relative overflow-hidden">
           <img
             src={thumbnail || defaultThumbnail}
@@ -84,6 +95,28 @@ const ContentCard: React.FC<ContentCardProps> = ({
               >
                 <Crown className="w-3 h-3 mr-1" />
                 VIP
+              </motion.span>
+            )}
+            
+            {isBanned && (
+              <motion.span 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.4 + index * 0.1 }}
+                className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg"
+              >
+                BANNED
+              </motion.span>
+            )}
+            
+            {isUnknown && (
+              <motion.span 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.4 + index * 0.1 }}
+                className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-lg"
+              >
+                UNKNOWN
               </motion.span>
             )}
           </div>

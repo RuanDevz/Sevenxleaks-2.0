@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import axios from "axios";
-import { useTheme } from "../../contexts/ThemeContext";
-import { useRegion } from "../../contexts/RegionContext";
-import { Calendar, Tag, ArrowLeft } from "lucide-react";
-import Loading from "../../components/Loading/Loading";
-import DownloadOptions from "../../components/DownloadOptions";
+import { useTheme } from "../contexts/ThemeContext";
+import { useRegion } from "../contexts/RegionContext";
+import { Calendar, Tag, ArrowLeft, HelpCircle, Zap } from "lucide-react";
+import Loading from "../components/Loading/Loading";
+import DownloadOptions from "../components/DownloadOptions";
+import { Helmet } from "react-helmet";
 
 type ContentItem = {
   id: number;
@@ -13,6 +13,9 @@ type ContentItem = {
   link: string;
   linkP: string;
   linkG: string;
+  linkMV1: string;
+  linkMV2: string;
+  linkMV3: string;
   category: string;
   postDate: string;
   createdAt: string;
@@ -20,7 +23,7 @@ type ContentItem = {
   slug: string;
 };
 
-const VIPContentDetails = () => {
+const UnknownContentDetails = () => {
   const { slug } = useParams<{ slug: string }>();
   const [content, setContent] = useState<ContentItem | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -30,61 +33,45 @@ const VIPContentDetails = () => {
   const colors = getThemeColors();
 
   useEffect(() => {
-  const fetchContentDetails = async () => {
-    try {
+    // Mock content fetch - replace with actual API call
+    const fetchContentDetails = async () => {
       setLoading(true);
-      const token = localStorage.getItem("Token");
+      setTimeout(() => {
+        const mockContent: ContentItem = {
+          id: 1,
+          name: "Unknown Content Example",
+          link: "https://example.com/unknown",
+          linkP: "https://example.com/unknown-p",
+          linkG: "https://example.com/unknown-g",
+          linkMV1: "https://example.com/unknown-mv1",
+          linkMV2: "https://example.com/unknown-mv2",
+          linkMV3: "https://example.com/unknown-mv3",
+          category: "Unknown",
+          postDate: "2024-01-15",
+          createdAt: "2024-01-15",
+          updatedAt: "2024-01-15",
+          slug: slug || ""
+        };
+        setContent(mockContent);
+        setLoading(false);
+      }, 1000);
+    };
 
-      const response = await axios.get<{ data: string }>(
-        `${import.meta.env.VITE_BACKEND_URL}/vipcontent/${slug}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'x-api-key': `${import.meta.env.VITE_FRONTEND_API_KEY}`
-          },
-        }
-      );
+    if (slug) fetchContentDetails();
+  }, [slug]);
 
-      if (!response.data || !response.data.data) {
-        throw new Error('Resposta inválida do servidor');
-      }
-
-      // Decodifica base64 removendo o 3º caractere antes
-      const decoded = decodeModifiedBase64(response.data.data);
-      setContent(decoded);
-    } catch (error) {
-      console.error("Error fetching content details:", error);
-      setError("Failed to load content details. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
 
-  if (slug) {
-    fetchContentDetails();
+  if (loading) {
+    return <Loading />;
   }
-}, [slug]);
-
-// Função auxiliar para decodificar o base64 modificado
-function decodeModifiedBase64(encodedStr: string): any {
-  const fixedBase64 = encodedStr.slice(0, 2) + encodedStr.slice(3);
-  const jsonString = atob(fixedBase64);
-  return JSON.parse(jsonString);
-}
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
-
-if (loading) {
-  return <Loading />;
-}
-
 
   if (error) {
     return (
@@ -93,11 +80,11 @@ if (loading) {
           <h2 className="text-2xl font-bold mb-4">Error</h2>
           <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>{error}</p>
           <Link 
-            to="/vip" 
-            className={`mt-6 flex items-center gap-2 text-sm font-medium ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}
+            to="/unknown" 
+            className={`mt-6 flex items-center gap-2 text-sm font-medium ${theme === 'dark' ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-500'}`}
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to VIP content
+            Back to unknown content
           </Link>
         </div>
       </div>
@@ -113,11 +100,11 @@ if (loading) {
             The content you're looking for doesn't exist or has been removed.
           </p>
           <Link 
-            to="/vip" 
-            className={`mt-6 flex items-center gap-2 text-sm font-medium ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}
+            to="/unknown" 
+            className={`mt-6 flex items-center gap-2 text-sm font-medium ${theme === 'dark' ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-500'}`}
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to VIP content
+            Back to unknown content
           </Link>
         </div>
       </div>
@@ -126,25 +113,29 @@ if (loading) {
 
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-gray-50 via-white to-gray-100'}`}>
+      <Helmet>
+        <title>Sevenxleaks - {content.name}</title>
+        <link rel="canonical" href={`https://sevenxleaks.com/unknown/${content.slug}`} />
+      </Helmet>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         <Link 
-          to="/vip" 
+          to="/unknown" 
           className={`inline-flex items-center gap-2 mb-6 text-sm font-medium transition-colors ${theme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to VIP content
+          Back to unknown content
         </Link>
 
         <div className={`${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-3xl shadow-2xl overflow-hidden border transition-all duration-300 hover:shadow-xl`}>
           <div className={`${
             theme === 'dark' 
-              ? region === 'asian' 
-                ? 'bg-gradient-to-r from-purple-900/30 to-purple-800/30' 
-                : 'bg-gradient-to-r from-orange-900/30 to-orange-800/30'
-              : region === 'asian'
-                ? 'bg-gradient-to-r from-purple-50 to-purple-100'
-                : 'bg-gradient-to-r from-orange-50 to-orange-100'
+              ? 'bg-gradient-to-r from-purple-900/30 to-gray-900/30' 
+              : 'bg-gradient-to-r from-purple-50 to-gray-100'
           } px-4 sm:px-8 py-4 sm:py-6 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+            <div className="flex items-center gap-3 mb-2">
+              <HelpCircle className="w-6 h-6 text-purple-500" />
+              <Zap className="w-6 h-6 text-gray-500" />
+            </div>
             <h1 className={`text-xl sm:text-2xl md:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               {content.name}
             </h1>
@@ -161,12 +152,8 @@ if (loading) {
                 <Tag className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
                 <span className={`inline-flex px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${
                   theme === 'dark' 
-                    ? region === 'asian'
-                      ? 'bg-purple-500/20 text-purple-300'
-                      : 'bg-orange-500/20 text-orange-300'
-                    : region === 'asian'
-                      ? 'bg-purple-100 text-purple-800'
-                      : 'bg-orange-100 text-orange-800'
+                    ? 'bg-gray-500/20 text-gray-300'
+                    : 'bg-gray-100 text-gray-800'
                 }`}>
                   {content.category}
                 </span>
@@ -175,6 +162,20 @@ if (loading) {
           </div>
 
           <div className="p-4 sm:p-6 lg:p-8">
+            <div className={`mb-6 p-4 rounded-lg flex items-start gap-3 ${
+              theme === 'dark' ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-100'
+            }`}>
+              <HelpCircle className={theme === 'dark' ? "text-amber-400" : "text-amber-600"} size={20} />
+              <div>
+                <p className={`font-medium ${theme === 'dark' ? "text-amber-400" : "text-amber-600"}`}>
+                  Unknown Content
+                </p>
+                <p className={`text-sm mt-1 ${theme === 'dark' ? "text-gray-300" : "text-gray-600"}`}>
+                  This content is unclassified and may contain varied material. Proceed with caution.
+                </p>
+              </div>
+            </div>
+
             <h2 className={`text-lg sm:text-xl font-semibold mb-4 sm:mb-6 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
               Download Options
             </h2>
@@ -185,7 +186,11 @@ if (loading) {
                 pixeldrain: content.linkP,
                 gofile: content.linkG
               }}
-              mirrorLinks={{}}
+              mirrorLinks={{
+                mega: content.linkMV1,
+                pixeldrain: content.linkMV2,
+                gofile: content.linkMV3
+              }}
             />
           </div>
         </div>
@@ -194,4 +199,4 @@ if (loading) {
   );
 };
 
-export default VIPContentDetails;
+export default UnknownContentDetails;
